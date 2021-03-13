@@ -31,7 +31,7 @@ func (pool *Pool) Start() {
 		select {
 		case client := <-pool.Register:
 			pool.Clients[client] = true
-			fmt.Println("New User connected : ", client.PlayerName)
+			fmt.Println("New User connected")
 			fmt.Println("Size of Connection Pool: ", len(pool.Clients))
 			// for client, _ := range pool.Clients {
 			// 	fmt.Println(client)
@@ -62,21 +62,21 @@ func (pool *Pool) Start() {
 					return
 				}
 			}
-		case guess := <-pool.DirectReg:
-			fmt.Println("Sending message to one client")
-			if err := guess.client.Conn.WriteJSON(guess.message); err != nil {
+		case directmessage := <-pool.DirectReg:
+			fmt.Println("Sending message to one client : ", directmessage.client.PlayerName)
+			if err := directmessage.client.Conn.WriteJSON(directmessage.message); err != nil {
 				fmt.Println(err)
 				return
 			}
-		case guess := <-pool.DirectGuess:
-			fmt.Println("Sending message to one client")
-			if err := guess.client.Conn.WriteJSON(guess.message); err != nil {
+		case directmessage := <-pool.DirectGuess:
+			fmt.Println("Sending message to one client : ", directmessage.client.PlayerName)
+			if err := directmessage.client.Conn.WriteJSON(directmessage.message); err != nil {
 				fmt.Println(err)
 				return
 			}
-		case guess := <-pool.DirectError:
-			fmt.Println("Sending message to one client")
-			if err := guess.client.Conn.WriteJSON(guess.message); err != nil {
+		case directmessage := <-pool.DirectError:
+			fmt.Println("Sending message to one client : ", directmessage.client.PlayerName)
+			if err := directmessage.client.Conn.WriteJSON(directmessage.message); err != nil {
 				fmt.Println(err)
 				return
 			}

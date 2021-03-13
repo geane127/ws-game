@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var ran = rand.Intn(499) + 1
+var ran int
 var gameid int64 = 1
 
 //Client : Object of the connected client
@@ -98,6 +98,10 @@ func (c *Client) Read() {
 
 	var x int
 
+	// Update the random seed
+	rand.Seed(time.Now().UTC().UnixNano())
+	ran = rand.Intn(499) + 1
+
 	defer func() {
 		c.Pool.Unregister <- c
 		c.Conn.Close()
@@ -112,6 +116,7 @@ func (c *Client) Read() {
 
 		var reqMessage ReqMessage
 		json.Unmarshal([]byte(string(p)), &reqMessage)
+		fmt.Println()
 		fmt.Println("Message: ", reqMessage.Message, ", PlayerName: ", reqMessage.PlayerName, ", Guess: ", reqMessage.Guess, ", Timestamp: ", reqMessage.Timestamp, ", GameID: ", reqMessage.GameID)
 
 		// Hash value for the word "registration"
@@ -167,12 +172,15 @@ func (c *Client) Read() {
 
 func checkRan(p int) (x int, result string) {
 
-	fmt.Println(ran)
+	fmt.Println("Random Number = ", ran)
+	fmt.Println("Guess = ", p)
 
 	if p == ran {
 		fmt.Println("Bingo")
 		result = "Bingo"
 		x = 0
+		// Update random seed for generating the next random number
+		rand.Seed(time.Now().UTC().UnixNano())
 		ran = rand.Intn(499) + 1
 
 	} else {
