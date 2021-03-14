@@ -133,7 +133,7 @@ func (c *Client) Read() {
 			fmt.Println("Guess: ", getHashVal("guess"))
 
 			if reqMessage.GameID != gameid {
-				errorMessage := ErrorMessage{Message: getHashVal("error"), Reason: "696e636f72726563742067616d65204944", Timestamp: int64(time.Now().Unix())}
+				errorMessage := ErrorMessage{Message: getHashVal("error"), Reason: hex.EncodeToString([]byte("incorrect game ID")), Timestamp: int64(time.Now().Unix())}
 				error := ErrorMsgClient{errorMessage, c}
 				c.Pool.DirectError <- error
 			} else {
