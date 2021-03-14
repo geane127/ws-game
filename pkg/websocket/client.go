@@ -119,43 +119,31 @@ func (c *Client) Read() {
 		fmt.Println()
 		fmt.Println("Message: ", reqMessage.Message, ", PlayerName: ", reqMessage.PlayerName, ", Guess: ", reqMessage.Guess, ", Timestamp: ", reqMessage.Timestamp, ", GameID: ", reqMessage.GameID)
 
-		// Hash value for the word "registration"
-		bv := []byte("registration")
-		hasher := sha256.New()
-		hasher.Write(bv)
-		regsha := hex.EncodeToString(hasher.Sum(nil))
-
-		// Hash value for the word "guess"
-		bv = []byte("guess")
-		hasher = sha256.New()
-		hasher.Write(bv)
-		guesssha := hex.EncodeToString(hasher.Sum(nil))
-
 		// Display the timestamp from request message
 		tm := time.Unix(reqMessage.Timestamp, 0)
 		fmt.Println(tm)
 
-		if regsha == reqMessage.Message {
-			fmt.Println("Registration: ", regsha)
+		if getHashVal("registration") == reqMessage.Message {
+			fmt.Println("Registration: ", getHashVal("registration"))
 			c.PlayerName = reqMessage.PlayerName
 			reqMessage := RegResMessage{Message: reqMessage.Message, PlayerName: reqMessage.PlayerName, Timestamp: reqMessage.Timestamp, GameID: gameid}
 			guess := RegMsgClient{reqMessage, c}
 			c.Pool.DirectReg <- guess
-		} else if guesssha == reqMessage.Message {
-			fmt.Println("Guess: ", guesssha)
+		} else if getHashVal("guess") == reqMessage.Message {
+			fmt.Println("Guess: ", getHashVal("guess"))
 
 			if reqMessage.GameID != gameid {
-				errorMessage := ErrorMessage{Message: "ca00fccfb408989eddc401062c4d1219a6aceb6b9b55412357f1790862e8f178", Reason: "696e636f72726563742067616d65204944", Timestamp: int64(time.Now().Unix())}
+				errorMessage := ErrorMessage{Message: getHashVal("error"), Reason: "696e636f72726563742067616d65204944", Timestamp: int64(time.Now().Unix())}
 				error := ErrorMsgClient{errorMessage, c}
 				c.Pool.DirectError <- error
 			} else {
 				x, _ = checkRan(reqMessage.Guess)
 
 				if x == 0 {
-					winMessage := WinResMessage{Message: reqMessage.Message, Answer: reqMessage.Guess, Winner: c.PlayerName, GameID: gameid}
+					winMessage := WinResMessage{Message: getHashVal("win"), Answer: reqMessage.Guess, Winner: c.PlayerName, GameID: gameid}
 					c.Pool.Broadcast <- winMessage
 					gameid++
-					gameMessage := GameStartMessage{Message: "9b7db65d5e1f739da360fb8c65879114d63d44297fbd274a9e32c05887b5ba99", Timestamp: int64(time.Now().Unix()), GameID: gameid}
+					gameMessage := GameStartMessage{Message: getHashVal("gameStart"), Timestamp: int64(time.Now().Unix()), GameID: gameid}
 					c.Pool.BroadcastStart <- gameMessage
 				} else {
 					guessMessage := GuessResMessage{Message: reqMessage.Message, GuessResult: x, Timestamp: reqMessage.Timestamp, GameID: gameid}
@@ -195,4 +183,15 @@ func checkRan(p int) (x int, result string) {
 		}
 	}
 	return
+}
+
+func getHashVal(org string) (hashval string) {
+
+	bv := []byte(org)
+	hasher := sha256.New()
+	hasher.Write(bv)
+	hashval = hex.EncodeToString(hasher.Sum(nil))
+
+	return
+
 }
